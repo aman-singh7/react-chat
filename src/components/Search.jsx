@@ -3,6 +3,7 @@ import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updat
 import { db } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
+import { v4 as uuid } from "uuid";
 
 const Search = () => {
     const [username, setUsername] = useState("");
@@ -34,39 +35,83 @@ const Search = () => {
         // check wether the group(chats exist in firestore) exists, if not create
         const combinedId = currentUser.uid > user.uid ? currentUser.uid + user.uid : user.uid + currentUser.uid;
         try {
-            const res = await getDoc(doc(db, "chats", combinedId));
+            const res = await getDoc(doc(db, "groups", combinedId));
             
             if(!res.exists()) {
-                await setDoc(doc(db, "chats", combinedId), {messages: []});
+                // Unique room
+                const roomId = uuid()
 
-                // create user chats
+                // Set the chat to be empty
+                await setDoc(doc(db, "chats", roomId), {messages: []});
+
+                // Map id -> room
                 await updateDoc(doc(db, "userChats", currentUser.uid), {
-                    [combinedId+".userInfo"]: {
-                        uid: user.uid,
-                        displayName: user.displayName,
+                    [combinedId+".info"]: {
+                        title: user.displayName,
                         photoURL: user.photoURL,
                     },
                     [combinedId+".date"]: serverTimestamp(),
+                    [combinedId+".roomId"]: roomId,
                 })
 
                 await updateDoc(doc(db, "userChats", user.uid), {
-                    [combinedId+".userInfo"]: {
-                        uid: currentUser.uid,
-                        displayName: currentUser.displayName,
+                    [combinedId+".info"]: {
+                        title: currentUser.displayName,
                         photoURL: currentUser.photoURL,
                     },
                     [combinedId+".date"]: serverTimestamp(),
+                    [combinedId+".roomId"]: roomId,
+                })
+
+                // Map group to room
+                await setDoc(doc(db, "groups", combinedId), {roomId: roomId})
+
+                // Map room to user
+                await setDoc(doc(db, "rooms", roomId), {
+                    parent: combinedId,
+                    usersInfo: [
+                        {
+                            uid: currentUser.uid,
+                            displayName: currentUser.displayName,
+                            photoURL: currentUser.photoURL,
+                        },
+                        {
+                            uid: user.uid,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                        },
+                    ]
                 })
             }
 
-            dispatch({type: "CHANGE_USER", payload: user})
+            // Group data
+            const info = await getDoc(doc(db, "userChats", currentUser.uid));
+            const infoData = info.data()[combinedId];
+            const title = infoData.info.title;
+            const photoURL = infoData.info.photoURL;
+            const roomId = infoData.roomId;
+            
+            // Room data
+            const roomInfo = await getDoc(doc(db, "rooms", roomId));
+            const users = roomInfo.data().usersInfo;
+
+            const userMap = new Map(users.map((user) => [user.uid, user]))
+
+            const payload = {
+                groupId: combinedId,
+                roomId: roomId,
+                users: userMap,
+                title: title,
+                photoURL: photoURL,
+            }
+
+            dispatch({type: "CHANGE_USER", payload: payload})
         } catch (err) {
             console.log(err)
         }
         
         setUser(null)
         setUsername("")
-        // create user chats
     };
 
     return (
@@ -85,6 +130,7 @@ const Search = () => {
                 <img src={user.photoURL} alt="" />
                 <div className="userChatInfo">
                     <span>{user.displayName}</span>
+                    <p>{user.email}</p>
                 </div>
             </div>}
         </div>

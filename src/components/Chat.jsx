@@ -5,6 +5,7 @@ import More from "../img/more.png";
 import Messages from "./Messages";
 import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
+import MoreProfileOptions from "./MoreProfileOptions";
 
 
 const Chat = () => {
@@ -13,7 +14,7 @@ const Chat = () => {
     return (
         <div className="chat">
             <div className="chatInfo">
-                <span>{data.user?.displayName}</span>
+                <span>{data.title}</span>
                 <div className="chatIcons">
                     <img src={Cam} alt="" />
                     <img src={Add} alt="" />

@@ -25,7 +25,7 @@ const Input = () => {
                 (error) => {},
                 () => {
                     getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-                        await updateDoc(doc(db, "chats", data.chatId), {
+                        await updateDoc(doc(db, "chats", data.roomId), {
                             messages: arrayUnion({
                                 id: uuid(),
                                 text,
@@ -40,7 +40,7 @@ const Input = () => {
 
         }else {
             try {
-                await updateDoc(doc(db, "chats", data.chatId), {
+                await updateDoc(doc(db, "chats", data.roomId), {
                     messages: arrayUnion({
                         id: uuid(),
                         text,
@@ -53,18 +53,16 @@ const Input = () => {
             }
         }
 
-        await updateDoc(doc(db,"userChats", currentUser.uid), {
-            [data.chatId+".lastMessage"]: {
-                text,
-            },
-            [data.chatId+".date"]: serverTimestamp(),
+        const uids = data.users.keys();
+        [...uids].forEach(async uid => {
+            await updateDoc(doc(db,"userChats", uid), {
+                [data.groupId+".lastMessage"]: {
+                    text,
+                },
+                [data.groupId+".date"]: serverTimestamp(),
+            });
         });
-        await updateDoc(doc(db,"userChats", data.user.uid), {
-            [data.chatId+".lastMessage"]: {
-                text,
-            },
-            [data.chatId+".date"]: serverTimestamp(),
-        });
+        
 
         setText("")
         setImg(null)

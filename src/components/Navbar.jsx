@@ -2,6 +2,8 @@ import { signOut } from "firebase/auth";
 import React, { useContext } from "react";
 import { auth } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
+import MoreProfileOptions from "./MoreProfileOptions";
+import FormDialog from "./Dialog";
 
 const Navbar = () => {
     const {currentUser} = useContext(AuthContext)
@@ -10,9 +12,10 @@ const Navbar = () => {
         <div className="navbar">
             <span className="logo">NexChat</span>
             <div className="user">
-                <img src={currentUser.photoURL} alt="" />
                 <span>{currentUser.displayName}</span>
-                <button onClick={() => signOut(auth)}>logout</button>
+                <MoreProfileOptions />
+                {/* <FormDialog/> */}
+                {/* <button onClick={() => signOut(auth)}>logout</button> */}
             </div>
         </div>
     )
