@@ -1,11 +1,9 @@
 import React, { useContext } from "react";
 import Cam from "../img/cam.png";
-import Add from "../img/add.png";
-import More from "../img/more.png";
 import Messages from "./Messages";
 import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
-import MoreProfileOptions from "./MoreProfileOptions";
+import MoreChatOptions from "./MoreChatOptions";
 
 
 const Chat = () => {
@@ -17,8 +15,7 @@ const Chat = () => {
                 <span>{data.title}</span>
                 <div className="chatIcons">
                     <img src={Cam} alt="" />
-                    <img src={Add} alt="" />
-                    <img src={More} alt="" />
+                    {data.isGroup && <MoreChatOptions /> }
                 </div>
             </div>
             <Messages />

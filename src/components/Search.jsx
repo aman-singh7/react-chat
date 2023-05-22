@@ -52,6 +52,7 @@ const Search = () => {
                     },
                     [combinedId+".date"]: serverTimestamp(),
                     [combinedId+".roomId"]: roomId,
+                    [combinedId+".isGroup"]: false,
                 })
 
                 await updateDoc(doc(db, "userChats", user.uid), {
@@ -61,10 +62,11 @@ const Search = () => {
                     },
                     [combinedId+".date"]: serverTimestamp(),
                     [combinedId+".roomId"]: roomId,
+                    [combinedId+".isGroup"]: false,
                 })
 
                 // Map group to room
-                await setDoc(doc(db, "groups", combinedId), {roomId: roomId})
+                await setDoc(doc(db, "groups", combinedId), {roomId: roomId});
 
                 // Map room to user
                 await setDoc(doc(db, "rooms", roomId), {
@@ -81,7 +83,7 @@ const Search = () => {
                             photoURL: user.photoURL,
                         },
                     ]
-                })
+                });
             }
 
             // Group data
@@ -90,6 +92,7 @@ const Search = () => {
             const title = infoData.info.title;
             const photoURL = infoData.info.photoURL;
             const roomId = infoData.roomId;
+            const isGroup = infoData.isGroup;
             
             // Room data
             const roomInfo = await getDoc(doc(db, "rooms", roomId));
@@ -103,6 +106,7 @@ const Search = () => {
                 users: userMap,
                 title: title,
                 photoURL: photoURL,
+                isGroup: isGroup,
             }
 
             dispatch({type: "CHANGE_USER", payload: payload})

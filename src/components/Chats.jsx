@@ -30,6 +30,7 @@ const Chats = () => {
         const title = info[1].info.title;
         const photoURL = info[1].info.photoURL;
         const roomId = info[1].roomId;
+        const isGroup = info[1].isGroup;
 
         // Room data
         const roomInfo = await getDoc(doc(db, "rooms", roomId));
@@ -43,6 +44,7 @@ const Chats = () => {
             users: userMap,
             title: title,
             photoURL: photoURL,
+            isGroup: isGroup,
         }
 
         dispatch({type: "CHANGE_USER", payload: payload})

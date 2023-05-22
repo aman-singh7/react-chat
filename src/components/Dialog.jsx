@@ -7,12 +7,12 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-const FormDialog = () => {
-  const [open, setOpen] = useState(false);
+export default function inputDialog() {
+  const [open, setOpen] = useState(true);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  // const handleClickOpen = () => {
+  //   setOpen(true);
+  // };
 
   const handleClose = () => {
     setOpen(false);
@@ -20,9 +20,6 @@ const FormDialog = () => {
 
   return (
     <div className="formDialog">
-      <Button variant="outlined" onClick={handleClickOpen}>
-        Open form dialog
-      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Subscribe</DialogTitle>
         <DialogContent>
@@ -50,4 +47,4 @@ const FormDialog = () => {
 }
 
 
-export default FormDialog;
+// export default FormDialog;
