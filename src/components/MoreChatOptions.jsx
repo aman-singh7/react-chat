@@ -4,11 +4,25 @@ import { Menu, MenuItem, ListItemIcon,IconButton } from '@mui/material';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import { ExitToApp, People } from '@mui/icons-material';
 import { ChatContext } from "../context/ChatContext";
+import { AuthContext } from "../context/AuthContext";
+import { arrayRemove, arrayUnion, deleteField, doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import MembersListDialog from "./MemberList";
 
 const MoreChatOptions = () => {
-    const { data } = useContext(ChatContext);
+    const { currentUser } = useContext(AuthContext);
+    const { data, dispatch } = useContext(ChatContext);
 
+    const [openDialog, setOpenDialog] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
+
+    const handleOpenDialog = () => {
+        setOpenDialog(true);
+    }
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
 
     const open = Boolean(anchorEl);
 
@@ -16,19 +30,52 @@ const MoreChatOptions = () => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleInviteFriends = () => {
+    const handleInviteFriends =async () => {
         setAnchorEl(null);
         const message = `Hello, join my group ${data.title} using the below code: ${data.groupId}`
-        navigator.clipboard.writeText(message);
+        await navigator.clipboard.writeText(message);
         alert("Invite code copied in clipboard");
     };
 
-    const handleFriends = () => {
+    const handleMembersList = () => {
         setAnchorEl(null);
+        handleOpenDialog();
     };
 
-    const handleClearChat = () => {
+    const handleLeaveGroup = async () => {
         setAnchorEl(null);
+
+        const groupId = data.groupId;
+        const roomId = data.roomId;
+
+        // Delete from UserChats
+        await updateDoc(doc(db, "userChats", currentUser.uid), {
+            [groupId]: deleteField(),
+        });
+
+        // Update the group users list
+        await updateDoc(doc(db, "rooms", roomId), {
+            usersInfo: arrayRemove({
+                uid: currentUser.uid,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                email: currentUser.email,
+                member: true,
+             }),
+        });
+
+        // Update the group users list
+        await updateDoc(doc(db, "rooms", roomId), {
+            usersInfo: arrayUnion({
+                uid: currentUser.uid,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                email: currentUser.email,
+                member: false,
+             }),
+        });
+
+        dispatch({type: "RESET"});
     };
 
     const handleClose = () => {
@@ -66,19 +113,20 @@ const MoreChatOptions = () => {
             </ListItemIcon>
             Invite Friends
             </MenuItem>
-            <MenuItem onClick={handleFriends}>
+            <MenuItem onClick={handleMembersList}>
             <ListItemIcon>
                 <People fontSize="small" />
             </ListItemIcon>
-            Friends
+            Members
             </MenuItem>
-            <MenuItem onClick={handleClearChat}>
+            <MenuItem onClick={handleLeaveGroup}>
             <ListItemIcon>
                 <ExitToApp fontSize="small" />
             </ListItemIcon>
             Leave Group
             </MenuItem>
         </Menu>
+        <MembersListDialog open={openDialog} handleClose={handleCloseDialog} />
         </div>
     );
 }

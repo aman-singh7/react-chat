@@ -5,7 +5,7 @@ import { onSnapshot,doc } from "firebase/firestore";
 import { db } from "../firebase";
 
 const Messages = () => {
-    const [messages, setMessages] = useState([])
+    const [messages, setMessages] = useState([]);
     const { data } = useContext(ChatContext);
 
     useEffect(() => {
@@ -13,11 +13,13 @@ const Messages = () => {
             doc.exists() && setMessages(doc.data().messages);
         })
 
+        if(data.roomId == "null") {
+            setMessages([]);
+        }
         return () => {
             unSub();
-        };
-    }, [data.roomId]);
-
+        }
+    }, [data]);
 
     return (
         <div className="messages">

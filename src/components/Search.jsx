@@ -75,12 +75,16 @@ const Search = () => {
                         {
                             uid: currentUser.uid,
                             displayName: currentUser.displayName,
+                            email: currentUser.email,
                             photoURL: currentUser.photoURL,
+                            member: true,
                         },
                         {
                             uid: user.uid,
                             displayName: user.displayName,
+                            email: user.email,
                             photoURL: user.photoURL,
+                            member: true,
                         },
                     ]
                 });

@@ -9,13 +9,16 @@ export const ChatContextProvider  = ({children}) => {
         groupId: "null",
         roomId: "null",
         isGroup: false,
-        users: {},
+        users: new Map(),
     }
 
     const chatReducer = (state, action) => {
         switch(action.type) {
             case "CHANGE_USER":
                 return action.payload;
+            
+            case "RESET":
+                return INITIAL_STATE;
             
             default:
                 return state;

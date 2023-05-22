@@ -8,11 +8,37 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { v4 as uuid } from "uuid";
 import { ChatContext } from "../context/ChatContext";
 import { arrayUnion, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import FormDialog from "./InputDialog";
 
 const MoreProfileOptions = () => {
     const { currentUser } = useContext(AuthContext);
     const { dispatch } = useContext(ChatContext);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [toCreateGroup, setToCreateGroup] = useState(true);
+
+    let dialogValue;
+
+    const setDialogValue = (val) => {
+        dialogValue = val;
+    }
+
+    const handleOpenDialog = () => {
+        setOpenDialog(true);
+    }
+
+    const handleOkDialog = async () => {
+        setOpenDialog(false);
+        if(toCreateGroup) {
+            await createGroup();
+        } else {
+            await joinGroup();
+        }
+    }
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
 
     const open = Boolean(anchorEl);
 
@@ -20,10 +46,32 @@ const MoreProfileOptions = () => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleCreateGroup = async  () => {
+    const handleCreateGroup =  () => {
         setAnchorEl(null);
-        const name = prompt("Enter group name");
+        setToCreateGroup(true);
+        handleOpenDialog();
+    };
+
+    const handleJoinGroup = async () => {
+        setAnchorEl(null);
+        setToCreateGroup(false);
+        handleOpenDialog();
+    };
+
+    const handleLogout = () => {
+        signOut(auth);
+        setAnchorEl(null);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const createGroup = async () => {
+        const name = dialogValue;
         if (!name) return;
+
+        console.log(name);
 
         const storageRef = ref(storage, "group.png");
         const photoURL = await getDownloadURL(storageRef);
@@ -61,6 +109,8 @@ const MoreProfileOptions = () => {
                     uid: currentUser.uid,
                     displayName: currentUser.displayName,
                     photoURL: currentUser.photoURL,
+                    email: currentUser.email,
+                    member: true,
                 },
             ]
         });
@@ -81,11 +131,10 @@ const MoreProfileOptions = () => {
         }
 
         dispatch({type: "CHANGE_USER", payload: payload})
-    };
+    }
 
-    const handleJoinGroup = async () => {
-        setAnchorEl(null);
-        const groupId = prompt("Enter group id");
+    const joinGroup = async () => {
+        const groupId = dialogValue;
         if(!groupId) return;
 
         // Join group logic
@@ -102,10 +151,13 @@ const MoreProfileOptions = () => {
 
         // Map room to user
         await updateDoc(doc(db, "rooms", roomId), {
+            parent: groupId,
             usersInfo: arrayUnion({
                 uid: currentUser.uid,
                 displayName: currentUser.displayName,
                 photoURL: currentUser.photoURL,
+                email: currentUser.email,
+                member: true,
              }),
         });
 
@@ -136,17 +188,8 @@ const MoreProfileOptions = () => {
             isGroup: true,
         }
 
-        dispatch({type: "CHANGE_USER", payload: payload})
-    };
-
-    const handleLogout = () => {
-        signOut(auth);
-        setAnchorEl(null);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+        dispatch({type: "CHANGE_USER", payload: payload});
+    }
 
     return (
         <div className="moreOptions">
@@ -193,6 +236,7 @@ const MoreProfileOptions = () => {
             Logout
             </MenuItem>
         </Menu>
+        <FormDialog open={openDialog} handleCloseDialog={handleCloseDialog} handleOkDialog={handleOkDialog} changeValue={setDialogValue} toCreateGroup={toCreateGroup} />
         </div>
     );
 }
